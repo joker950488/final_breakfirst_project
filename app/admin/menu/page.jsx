@@ -60,7 +60,7 @@ export default function MenuManagementPage() {
             });
             setIsCreating(false);
         } catch (error) {
-            console.error("發生錯誤:", error.message);
+            console.error("發生了錯誤:", error.message);
         }
     };
 
