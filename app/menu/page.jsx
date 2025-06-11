@@ -77,22 +77,34 @@ export default function MenuPage() {
                     setCart({});
                 }
             }
+
+            // 從 sessionStorage 讀取隱藏的訂單
+            const savedHiddenOrders = sessionStorage.getItem('hiddenOrders');
+            if (savedHiddenOrders) {
+                try {
+                    const parsedHiddenOrders = JSON.parse(savedHiddenOrders);
+                    setHiddenOrders(new Set(parsedHiddenOrders));
+                } catch (e) {
+                    console.error("從 SessionStorage 解析隱藏訂單失敗:", e);
+                    sessionStorage.removeItem('hiddenOrders');
+                }
+            }
         }
         getMenuItems();
         getCompletedOrders();
     }, []);
 
-    const getMenuItems = async () => {
-        try {
-            const response = await fetch("/api/menu");
+        const getMenuItems = async () => {
+            try {
+                const response = await fetch("/api/menu");
             if (!response.ok) throw new Error("獲取菜單失敗");
-            const data = await response.json();
-            setMenuItems(data);
+                const data = await response.json();
+                setMenuItems(data);
         } catch (error) {
             console.error("獲取菜單失敗:", error);
             toast.error("獲取菜單失敗，請稍後再試");
-        }
-    };
+            }
+        };
 
     const getCompletedOrders = async () => {
         try {
@@ -151,7 +163,12 @@ export default function MenuPage() {
     };
 
     const hideOrder = (orderId) => {
-        setHiddenOrders(prev => new Set([...prev, orderId]));
+        setHiddenOrders(prev => {
+            const newHiddenOrders = new Set([...prev, orderId]);
+            // 將隱藏的訂單保存到 sessionStorage
+            sessionStorage.setItem('hiddenOrders', JSON.stringify([...newHiddenOrders]));
+            return newHiddenOrders;
+        });
         toast.success("已隱藏訂單通知");
     };
 
