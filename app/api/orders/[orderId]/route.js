@@ -31,16 +31,12 @@ export async function DELETE(request, { params }) {
 
         // 刪除訂單項目
         await prisma.orderItem.deleteMany({
-            where: {
-                orderId: orderId
-            }
+            where: { orderId }
         });
 
         // 刪除訂單
         await prisma.order.delete({
-            where: {
-                id: orderId
-            }
+            where: { id: orderId }
         });
 
         return NextResponse.json(
@@ -50,7 +46,7 @@ export async function DELETE(request, { params }) {
     } catch (error) {
         console.error("刪除訂單失敗:", error);
         return NextResponse.json(
-            { message: "刪除訂單失敗", error: error.message },
+            { message: "伺服器錯誤", error: String(error) },
             { status: 500 }
         );
     }
