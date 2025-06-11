@@ -25,6 +25,14 @@ export async function POST(request) {
             );
         }
 
+        // 新增 category 欄位的檢查
+        if (!body.category || typeof body.category !== "string") {
+            return NextResponse.json(
+                { message: "category 是必填欄位" },
+                { status: 400 }
+            );
+        }
+
         const newMenu = await prisma.menuItem.create({
             data: {
                 name: body.name,
@@ -35,6 +43,7 @@ export async function POST(request) {
                     typeof body.isAvailable === "boolean"
                         ? body.isAvailable
                         : true,
+                category: body.category, // 確保 category 被儲存
             },
         });
 

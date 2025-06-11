@@ -1,3 +1,6 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+
 export async function PUT(request, { params }) {
     try {
         const { id } = params;
@@ -49,6 +52,40 @@ export async function PUT(request, { params }) {
     } catch (error) {
         console.error("後端錯誤:", error);
         return Response.json(
+            { message: "伺服器錯誤", error: String(error) },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(request, { params }) {
+    try {
+        const { id } = params;
+
+        // 確認該菜單是否存在
+        const existingItem = await prisma.menuItem.findUnique({
+            where: { id },
+        });
+
+        if (!existingItem) {
+            return NextResponse.json(
+                { message: "找不到菜單項目" },
+                { status: 404 }
+            );
+        }
+
+        // 執行刪除
+        await prisma.menuItem.delete({
+            where: { id },
+        });
+
+        return NextResponse.json(
+            { message: "菜單項目已成功刪除" },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error("刪除菜單項目失敗:", error);
+        return NextResponse.json(
             { message: "伺服器錯誤", error: String(error) },
             { status: 500 }
         );

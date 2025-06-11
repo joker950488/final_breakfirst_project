@@ -2,22 +2,66 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
-    const [isLoginFromGoogle, setIsLoginFromGoogle] = useState(false);
     const { data: session } = useSession();
+    const [user, setUser] = useState(null);
 
-    const oauthUser = session?.user;
-    const sessionUser = JSON.parse(sessionStorage.getItem("user"));
-    let user;
-    if (oauthUser) {
-        user = oauthUser;
-        setIsLoginFromGoogle(true);
-    } else if (sessionUser) {
-        user = sessionUser;
-    } else {
-    }
+    useEffect(() => {
+        const oauthUser = session?.user;
+        const sessionUser = sessionStorage.getItem("user");
+        let userData;
+
+        if (oauthUser) {
+            // 如果是 Google 登入，將用戶數據存儲到 sessionStorage
+            userData = {
+                id: oauthUser.id,
+                name: oauthUser.name,
+                email: oauthUser.email,
+                role: oauthUser.role || "CUSTOMER" // 預設為 CUSTOMER 角色
+            };
+            sessionStorage.setItem("user", JSON.stringify(userData));
+        } else if (sessionUser) {
+            try {
+                userData = JSON.parse(sessionUser);
+            } catch (error) {
+                console.error("解析用戶數據失敗:", error);
+            }
+        }
+
+        setUser(userData);
+
+        // 監聽 storage 事件
+        const handleStorageChange = () => {
+            const updatedUser = sessionStorage.getItem("user");
+            if (updatedUser) {
+                try {
+                    setUser(JSON.parse(updatedUser));
+                } catch (error) {
+                    console.error("解析用戶數據失敗:", error);
+                }
+            } else {
+                setUser(null);
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, [session]);
+
+    const handleLogout = async () => {
+        // 清除 sessionStorage
+        sessionStorage.removeItem("user");
+        
+        // 如果是 Google 登入，使用 NextAuth 的 signOut
+        if (session) {
+            await signOut({ redirect: false });
+        }
+        
+        // 重新導向到首頁
+        window.location.href = "/";
+    };
 
     const getRoleLinks = () => {
         if (!user) return [];
@@ -40,7 +84,7 @@ export default function Navbar() {
                     { href: "/admin/menu", name: "菜單管理" },
                     { href: "/admin/users", name: "使用者管理" },
                     { href: "/orders/pending", name: "等待中的訂單" },
-                    { href: "/orders/ready", name: "完成的訂單" },
+                    { href: "/orders/completed", name: "完成的訂單" },
                     { href: "/kitchen", name: "廚房訂單" },
                 ];
             default:
@@ -77,14 +121,7 @@ export default function Navbar() {
                                 您好，{user.name}
                             </span>
                             <button
-                                onClick={() => {
-                                    if (isLoginFromGoogle) {
-                                        signOut(); // 登出 Google 帳號
-                                    } else {
-                                        sessionStorage.removeItem("user");
-                                        window.location.href = "/login";
-                                    }
-                                }}
+                                onClick={handleLogout}
                                 className="bg-white text-pink-600 font-semibold px-3 py-1.5 rounded-md hover:bg-gray-100 transition duration-300"
                                 aria-label="登出帳號"
                             >
@@ -94,7 +131,7 @@ export default function Navbar() {
                     ) : (
                         <Link
                             href="/login"
-                            className="bg-white text-pink-600 font-semibold px-4 py-1.5 rounded-md hover:bg-gray-100 transition duration-300"
+                            className="bg-white text-pink-600 font-semibold px-3 py-1.5 rounded-md hover:bg-gray-100 transition duration-300"
                             aria-label="登入帳號"
                         >
                             登入

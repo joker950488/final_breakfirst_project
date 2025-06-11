@@ -6,7 +6,6 @@ import prisma from "@/lib/prisma";
 export async function POST(request) {
     try {
         const body = await request.json();
-
         const { email, password } = body;
 
         // 驗證欄位
@@ -29,7 +28,18 @@ export async function POST(request) {
             where: { email },
         });
 
-        if (!user || user.password !== password) {
+        console.log("查詢到的使用者:", user); // 加入日誌
+
+        if (!user) {
+            console.log("找不到使用者:", email); // 加入日誌
+            return NextResponse.json(
+                { message: "帳號或密碼錯誤" },
+                { status: 401 }
+            );
+        }
+
+        if (user.password !== password) {
+            console.log("密碼不匹配"); // 加入日誌
             return NextResponse.json(
                 { message: "帳號或密碼錯誤" },
                 { status: 401 }
@@ -40,7 +50,12 @@ export async function POST(request) {
         return NextResponse.json(
             {
                 message: "登入成功",
-                user: { id: user.id, role: user.role, name: user.name },
+                user: { 
+                    id: user.id, 
+                    role: user.role, 
+                    name: user.name,
+                    email: user.email 
+                },
             },
             { status: 200 }
         );

@@ -1,9 +1,35 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Home() {
+    const router = useRouter();
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        // 初始載入時檢查登入狀態
+        const storedUser = sessionStorage.getItem("user");
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+
+        // 監聽 storage 事件
+        const handleStorageChange = () => {
+            const storedUser = sessionStorage.getItem("user");
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            } else {
+                setUser(null);
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+        return () => window.removeEventListener("storage", handleStorageChange);
+    }, []);
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-orange-100 via-pink-100 to-red-100 px-6 py-12 text-gray-800">
             <main className="text-center flex flex-col items-center gap-8 max-w-xl">

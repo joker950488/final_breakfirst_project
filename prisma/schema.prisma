@@ -12,7 +12,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -20,6 +19,7 @@ enum Role {
   STAFF
   CHEF
   OWNER
+  CAPTAIN
 }
 
 enum OrderStatus {
@@ -28,6 +28,8 @@ enum OrderStatus {
   READY
   COMPLETED
   CANCELLED
+  DELIVERING
+  DELIVERED
 }
 
 model User {
@@ -36,10 +38,15 @@ model User {
   name          String
   password      String
   role          Role
+  phone         String?
+  address       String?
+  avatarUrl     String?
+  isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   orders        Order[]
   notifications Notification[]
+  deliveries    Order[]   @relation("DeliveryCaptain")
 }
 
 model MenuItem {
@@ -49,6 +56,7 @@ model MenuItem {
   price         Float
   imageUrl      String?
   isAvailable   Boolean   @default(true)
+  category      String
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   orderItems    OrderItem[]
@@ -58,6 +66,8 @@ model Order {
   id            String    @id @default(cuid())
   customer      User      @relation(fields: [customerId], references: [id])
   customerId    String
+  captain       User?     @relation("DeliveryCaptain", fields: [captainId], references: [id])
+  captainId     String?
   status        OrderStatus @default(PENDING)
   totalAmount   Float
   createdAt     DateTime  @default(now())
@@ -65,7 +75,11 @@ model Order {
   items         OrderItem[]
   paymentStatus Boolean   @default(false)
   completedAt   DateTime?
+  deliveredAt   DateTime?
   notifications Notification[]
+  deliveryAddress String?
+  deliveryPhone   String?
+  deliveryNotes  String?
 }
 
 model OrderItem {

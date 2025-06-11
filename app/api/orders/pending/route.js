@@ -12,7 +12,7 @@ export async function GET(request) {
             );
         }
 
-        // 查 userId 的角色是否是 STAFF
+        // 查詢用戶角色
         const user = await prisma.user.findUnique({
             where: { id: userId },
             select: { role: true },
@@ -25,27 +25,36 @@ export async function GET(request) {
             );
         }
 
-        if (user.role !== "STAFF") {
+        // 允許 STAFF 和 OWNER 訪問
+        if (user.role !== "STAFF" && user.role !== "OWNER") {
             return new NextResponse(
                 JSON.stringify({
-                    error: "Access denied: Only staff can access this API",
+                    error: "Access denied: Only staff and owner can access this API",
                 }),
                 { status: 403 }
             );
         }
 
-        // 只有當角色是 STAFF 才撈所有 PENDING 訂單
+        // 獲取所有 PENDING 訂單
         const orders = await prisma.order.findMany({
             where: { status: "PENDING" },
             orderBy: { createdAt: "desc" },
             include: {
                 customer: {
-                    select: { name: true },
+                    select: { 
+                        id: true,
+                        name: true,
+                        phone: true,
+                        address: true
+                    },
                 },
                 items: {
                     include: {
                         menuItem: {
-                            select: { name: true, price: true },
+                            select: { 
+                                name: true, 
+                                price: true 
+                            },
                         },
                     },
                 },
@@ -58,16 +67,24 @@ export async function GET(request) {
             paymentStatus: order.paymentStatus,
             totalAmount: order.totalAmount,
             createdAt: order.createdAt,
-            customer: {
-                name: order.customer.name,
+            customer: order.customer ? {
+                id: order.customer.id,
+                name: order.customer.name || '未知',
+                phone: order.customer.phone || '未知',
+                address: order.customer.address || '未知'
+            } : {
+                id: '未知',
+                name: '未知',
+                phone: '未知',
+                address: '未知'
             },
             items: order.items.map((item) => ({
                 id: item.id,
                 quantity: item.quantity,
-                specialRequest: item.specialRequest,
+                specialRequest: item.specialRequest || '',
                 menuItem: {
-                    name: item.menuItem.name,
-                    price: item.menuItem.price,
+                    name: item.menuItem?.name || '未知商品',
+                    price: item.menuItem?.price || 0,
                 },
             })),
         }));

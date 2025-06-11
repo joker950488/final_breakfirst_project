@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { notifyOrderStatus } from "@/lib/mqttClient";
 
 export async function POST(request) {
     try {
@@ -17,6 +18,8 @@ export async function POST(request) {
             where: { id: orderId },
             data: { paymentStatus: true },
         });
+
+        notifyOrderStatus(updatedOrder, "payment");
 
         return NextResponse.json(updatedOrder);
     } catch (error) {

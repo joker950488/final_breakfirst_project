@@ -1,19 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 export default function LoginPage() {
     const router = useRouter();
+    const { data: session } = useSession();
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // 檢查是否已經登入
+    useEffect(() => {
+        if (session?.user) {
+            const userData = {
+                id: session.user.id,
+                name: session.user.name,
+                email: session.user.email,
+                role: session.user.role
+            };
+            sessionStorage.setItem("user", JSON.stringify(userData));
+            
+            if (userData.role === "CAPTAIN") {
+                router.push("/captain");
+            } else if (userData.role === "STAFF") {
+                router.push("/orders/ready");
+            } else if (userData.role === "CUSTOMER") {
+                router.push("/menu");
+            } else {
+                router.push("/");
+            }
+        } else {
+            const user = sessionStorage.getItem("user");
+            if (user) {
+                const userData = JSON.parse(user);
+                if (userData.role === "CAPTAIN") {
+                    router.push("/captain");
+                } else if (userData.role === "STAFF") {
+                    router.push("/orders/ready");
+                } else if (userData.role === "CUSTOMER") {
+                    router.push("/menu");
+                } else {
+                    router.push("/");
+                }
+            }
+        }
+    }, [session, router]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -44,59 +82,94 @@ export default function LoginPage() {
             if (!res.ok) throw new Error(data.message || "登入失敗");
 
             const user = data.user;
-
             sessionStorage.setItem("user", JSON.stringify(user));
-            window.location.href = "/";
-        } catch (err) {
-            setError(err.message);
+            
+            if (user.role === "CAPTAIN") {
+                router.push("/captain");
+            } else if (user.role === "STAFF") {
+                router.push("/orders/ready");
+            } else if (user.role === "CUSTOMER") {
+                router.push("/menu");
+            } else {
+                router.push("/");
+            }
+        } catch (error) {
+            setError(error.message);
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const handleGoogleLogin = async () => {
+        try {
+            await signIn("google", { 
+                callbackUrl: "/menu",
+                redirect: true
+            });
+        } catch (error) {
+            console.error("Google 登入失敗:", error);
+            setError("Google 登入失敗，請稍後再試");
+        }
+    };
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-300 via-pink-400 to-red-400 px-4">
-            <div className="max-w-md w-full bg-white/30 backdrop-blur-lg border border-white/30 shadow-2xl rounded-2xl p-8 transition-all">
-                <h2 className="text-3xl font-extrabold text-center text-gray-700 drop-shadow mb-6">
-                    登入帳號
-                </h2>
+        <div className="min-h-screen bg-gradient-to-br from-orange-100 via-pink-100 to-red-100 flex items-center justify-center p-4">
+            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
+                <div className="text-center">
+                    <h2 className="text-3xl font-bold text-gray-900">歡迎回來</h2>
+                    <p className="mt-2 text-sm text-gray-600">
+                        請登入您的帳號
+                    </p>
+                </div>
 
                 {error && (
-                    <div className="mb-4 text-red-600 text-sm text-center font-medium bg-red-100 p-2 rounded-md shadow-sm">
-                        ⚠️ {error}
+                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
+                        <span className="block sm:inline">{error}</span>
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="space-y-5">
-                    <InputField
-                        label="電子信箱"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                    />
-                    <InputField
-                        label="密碼"
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                    />
+                <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+                    <div className="space-y-4">
+                        <InputField
+                            label="電子郵件"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                        />
+                        <InputField
+                            label="密碼"
+                            name="password"
+                            type="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white font-bold py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50 drop-shadow-md"
-                    >
-                        {isSubmitting ? "登入中..." : "登入"}
-                    </button>
+                    <div>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-400 via-pink-500 to-red-500 hover:from-orange-500 hover:via-pink-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                        >
+                            {isSubmitting ? "登入中..." : "登入"}
+                        </button>
+                    </div>
                 </form>
 
-                <div className="mt-6 text-center">
+                <div className="mt-6">
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-white text-gray-500">或</span>
+                        </div>
+                    </div>
+
                     <button
-                        type="button"
-                        onClick={() => signIn("google")}
-                        className="w-full bg-white text-gray-800 border border-gray-300 py-2 px-4 rounded-md flex items-center justify-center gap-2 shadow hover:bg-gray-50 transition"
+                        onClick={handleGoogleLogin}
+                        className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-300"
                     >
                         <Image
                             src="/google.png"
@@ -108,15 +181,17 @@ export default function LoginPage() {
                     </button>
                 </div>
 
-                <p className="mt-6 text-center text-sm text-gray-700">
-                    還沒有帳號？{" "}
-                    <Link
-                        href="/register"
-                        className="text-pink-700 underline font-semibold hover:text-gray-200"
-                    >
-                        立即註冊
-                    </Link>
-                </p>
+                <div className="text-center mt-4">
+                    <p className="text-sm text-gray-600">
+                        還沒有帳號？{" "}
+                        <Link
+                            href="/register"
+                            className="font-medium text-pink-600 hover:text-pink-500"
+                        >
+                            立即註冊
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );
@@ -127,17 +202,18 @@ function InputField({ label, name, type, value, onChange }) {
         <div>
             <label
                 htmlFor={name}
-                className="block text-sm font-semibold text-gray-800 mb-1"
+                className="block text-sm font-medium text-gray-700"
             >
                 {label}
             </label>
             <input
-                type={type}
-                name={name}
                 id={name}
+                name={name}
+                type={type}
+                required
                 value={value}
                 onChange={onChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-white/80 text-gray-800 focus:ring-2 focus:ring-pink-400 focus:outline-none"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
             />
         </div>
     );
