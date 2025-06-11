@@ -5,7 +5,7 @@ export async function GET(request) {
     try {
         // 從請求頭中獲取用戶 ID
         const userId = request.headers.get("x-user-id");
-        
+
         if (!userId) {
             return NextResponse.json(
                 { message: "未登入" },
@@ -26,9 +26,9 @@ export async function GET(request) {
             );
         }
 
-        if (user.role !== "STAFF") {
+        if (user.role !== "STAFF" && user.role !== "OWNER") {
             return NextResponse.json(
-                { message: "只有服務人員可以訪問此 API" },
+                { message: "只有服務人員和老闆可以訪問此 API" },
                 { status: 403 }
             );
         }

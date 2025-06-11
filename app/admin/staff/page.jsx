@@ -324,11 +324,11 @@ export default function StaffManagementPage() {
                                             </span>
                                         </div>
                                     )}
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-800">
-                                            {employee.name}
-                                        </h3>
-                                        <p className="text-sm text-gray-500">{employee.email}</p>
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800">
+                                        {employee.name}
+                                    </h3>
+                                    <p className="text-sm text-gray-500">{employee.email}</p>
                                     </div>
                                 </div>
                                 <span

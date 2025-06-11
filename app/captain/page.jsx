@@ -16,6 +16,8 @@ export default function CaptainPage() {
     const [mqttClient, setMqttClient] = useState(null); // 新增 MQTT client state
     const [isConnected, setIsConnected] = useState(false); // 新增 MQTT 連線狀態 state
     const router = useRouter();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // 新增獲取訂單的函數
     const getOrders = async () => {
@@ -26,7 +28,11 @@ export default function CaptainPage() {
                 return;
             }
 
-            const response = await fetch(`/api/orders/captain?captainId=${user.id}`);
+            const response = await fetch("/api/orders/captain", {
+                headers: {
+                    "x-user-id": user.id
+                }
+            });
             if (!response.ok) {
                 if (response.status === 401) {
                     router.push("/login");
@@ -39,7 +45,9 @@ export default function CaptainPage() {
             setOrders(data);
         } catch (error) {
             console.error("獲取訂單失敗:", error);
-            toast.error("獲取訂單失敗，請稍後再試");
+            setError("獲取訂單失敗，請稍後再試");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -242,6 +250,27 @@ export default function CaptainPage() {
         }
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">載入中...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center text-red-600">
+                    <p>{error}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 px-4 sm:px-6 py-8">
             <Toaster position="top-right" /> {/* 新增 Toaster 元件 */}
@@ -250,12 +279,12 @@ export default function CaptainPage() {
                     <h1 className="text-3xl font-bold text-gray-800">
                         🚚 外送訂單
                     </h1>
-                    <button
-                        onClick={() => router.push("/captain/history")}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-                    >
-                        查看歷史訂單
-                    </button>
+                        <button
+                            onClick={() => router.push("/captain/history")}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                        >
+                            查看歷史訂單
+                        </button>
                 </div>
                 {!isConnected && (
                      <p className="text-red-600 text-center sm:text-left mb-4">⚠️ MQTT 即時通知未連接</p>
@@ -332,14 +361,14 @@ export default function CaptainPage() {
                                 </div>
 
                                 {order.captain?.id === user?.id && (
-                                    <div className="mt-6 flex justify-end">
-                                        <button
-                                            onClick={() => handleCompleteDelivery(order.id)}
-                                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-                                        >
-                                            ✅ 確認送達
-                                        </button>
-                                    </div>
+                                <div className="mt-6 flex justify-end">
+                                    <button
+                                        onClick={() => handleCompleteDelivery(order.id)}
+                                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
+                                    >
+                                        ✅ 確認送達
+                                    </button>
+                                </div>
                                 )}
                             </div>
                         ))}

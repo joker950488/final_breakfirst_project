@@ -75,8 +75,8 @@ export default function CheckoutPage() {
                 const itemQuantity = parseInt(quantity || 0, 10);
                 
                 return total + (itemPrice * itemQuantity);
-            }, 0);
-        };
+        }, 0);
+    };
         setTotalPrice(calculateTotalPrice());
     }, [cart, menuItems]);
 

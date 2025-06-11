@@ -25,7 +25,7 @@ export default function MenuManagementPage() {
         getMenu();
     }, []);
 
-    const getMenu = async () => {
+        const getMenu = async () => {
         try {
             const response = await fetch("/api/menu");
             if (!response.ok) throw new Error("獲取菜單失敗");
@@ -35,7 +35,7 @@ export default function MenuManagementPage() {
             console.error("獲取菜單失敗:", error);
             toast.error("獲取菜單失敗，請稍後再試");
         }
-    };
+        };
 
     const handleImageUpload = async (file) => {
         try {
@@ -77,10 +77,10 @@ export default function MenuManagementPage() {
         try {
             const imageUrl = await handleImageUpload(file);
             if (imageUrl) {
-                if (isEditing) {
-                    setEditItem(prev => ({ ...prev, imageUrl }));
-                } else {
-                    setNewItem(prev => ({ ...prev, imageUrl }));
+            if (isEditing) {
+                setEditItem(prev => ({ ...prev, imageUrl }));
+            } else {
+                setNewItem(prev => ({ ...prev, imageUrl }));
                 }
             }
         } catch (error) {

@@ -77,19 +77,19 @@ export default function KitchenPage() {
                         <div
                             className={`max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 p-4 border-l-4 border-green-500 ${t.visible ? 'animate-enter' : 'animate-leave'}`}
                         >
-                            <div className="flex-1 w-0">
+                                <div className="flex-1 w-0">
                                 <p className="text-sm font-medium text-gray-900">
                                     新訂單通知
                                 </p>
                                 <p className="mt-1 text-sm text-gray-500">
                                     訂單編號：{orderUpdate.orderId}
-                                </p>
+                                    </p>
                                 <div className="mt-2 text-sm text-gray-700">
-                                    {orderUpdate.order?.items?.map(item => (
-                                        <div key={item.id}>
+                                        {orderUpdate.order?.items?.map(item => (
+                                            <div key={item.id}>
                                             {item.menuItem.name} × {item.quantity}
-                                        </div>
-                                    ))}
+                                            </div>
+                                        ))}
                                 </div>
                                 <p className="mt-2 text-sm font-medium text-green-600">
                                     總金額：${orderUpdate.order?.totalAmount}
@@ -186,16 +186,16 @@ export default function KitchenPage() {
                         </span>
                     </div>
                 </div>
-                {orders.length === 0 ? (
+            {orders.length === 0 ? (
                     <div className="text-center text-gray-500">
                         <p>目前沒有待處理的訂單</p>
-                    </div>
-                ) : (
+                </div>
+            ) : (
                     <div className="space-y-6">
-                        {orders.map((order) => (
+                    {orders.map((order) => (
                             <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
                                         <h2 className="text-xl font-semibold">訂單 #{order.id}</h2>
                                         <p className="text-gray-600">
                                             顧客: {order.customer.name}
@@ -216,10 +216,10 @@ export default function KitchenPage() {
                                         完成製作
                                     </button>
                                 </div>
-                                <div className="border-t pt-4">
+                            <div className="border-t pt-4">
                                     <h3 className="font-semibold mb-2">訂單項目：</h3>
                                     <ul className="space-y-2">
-                                        {order.items.map((item) => (
+                                    {order.items.map((item) => (
                                             <li key={item.id} className="flex justify-between">
                                                 <span>
                                                     {item.menuItem.name} x {item.quantity}
@@ -232,19 +232,19 @@ export default function KitchenPage() {
                                                 <span className="text-gray-600">
                                                     ${item.menuItem.price * item.quantity}
                                                 </span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                        </li>
+                                    ))}
+                                </ul>
                                     <div className="mt-4 pt-4 border-t flex justify-between items-center">
                                         <span className="font-semibold">總金額：</span>
                                         <span className="text-xl font-bold">${order.totalAmount}</span>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+                                        </div>
+                                    </div>
     );
 }

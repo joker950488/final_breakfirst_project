@@ -531,9 +531,9 @@ export default function OrdersPage() {
                                                                 </span>
                                                             </div>
                                                         )}
-                                                        <div>
-                                                            <p className="font-medium text-gray-800">{captain.name}</p>
-                                                            <p className="text-sm text-gray-500">{captain.phone}</p>
+                                                    <div>
+                                                        <p className="font-medium text-gray-800">{captain.name}</p>
+                                                        <p className="text-sm text-gray-500">{captain.phone}</p>
                                                         </div>
                                                     </div>
                                                     {selectedCaptain === captain.id && (

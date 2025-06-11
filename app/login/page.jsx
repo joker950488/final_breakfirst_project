@@ -26,6 +26,7 @@ export default function LoginPage() {
                 role: session.user.role
             };
             sessionStorage.setItem("user", JSON.stringify(userData));
+            sessionStorage.setItem("userId", session.user.id);
             
             if (userData.role === "CAPTAIN") {
                 router.push("/captain");
@@ -40,6 +41,7 @@ export default function LoginPage() {
             const user = sessionStorage.getItem("user");
             if (user) {
                 const userData = JSON.parse(user);
+                sessionStorage.setItem("userId", userData.id);
                 if (userData.role === "CAPTAIN") {
                     router.push("/captain");
                 } else if (userData.role === "STAFF") {
@@ -82,7 +84,15 @@ export default function LoginPage() {
             if (!res.ok) throw new Error(data.message || "登入失敗");
 
             const user = data.user;
+            console.log("登入成功，用戶數據:", user);
+
+            if (!user.id) {
+                throw new Error("用戶數據不完整");
+            }
+
             sessionStorage.setItem("user", JSON.stringify(user));
+            sessionStorage.setItem("userId", user.id);
+            console.log("已設置 userId:", user.id);
             
             if (user.role === "CAPTAIN") {
                 router.push("/captain");
@@ -94,6 +104,7 @@ export default function LoginPage() {
                 router.push("/");
             }
         } catch (error) {
+            console.error("登入錯誤:", error);
             setError(error.message);
         } finally {
             setIsSubmitting(false);
@@ -130,30 +141,30 @@ export default function LoginPage() {
 
                 <form className="mt-8 space-y-6" onSubmit={handleLogin}>
                     <div className="space-y-4">
-                        <InputField
+                    <InputField
                             label="電子郵件"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                        />
-                        <InputField
-                            label="密碼"
-                            name="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                        />
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                    />
+                    <InputField
+                        label="密碼"
+                        name="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                    />
                     </div>
 
                     <div>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
                             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-400 via-pink-500 to-red-500 hover:from-orange-500 hover:via-pink-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-                        >
-                            {isSubmitting ? "登入中..." : "登入"}
-                        </button>
+                    >
+                        {isSubmitting ? "登入中..." : "登入"}
+                    </button>
                     </div>
                 </form>
 
@@ -183,14 +194,14 @@ export default function LoginPage() {
 
                 <div className="text-center mt-4">
                     <p className="text-sm text-gray-600">
-                        還沒有帳號？{" "}
-                        <Link
-                            href="/register"
+                    還沒有帳號？{" "}
+                    <Link
+                        href="/register"
                             className="font-medium text-pink-600 hover:text-pink-500"
-                        >
-                            立即註冊
-                        </Link>
-                    </p>
+                    >
+                        立即註冊
+                    </Link>
+                </p>
                 </div>
             </div>
         </div>

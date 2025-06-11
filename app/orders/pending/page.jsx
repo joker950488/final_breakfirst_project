@@ -440,14 +440,6 @@ export default function PendingOrdersPage() {
                                 </div>
 
                                 <div className="mt-4 flex flex-wrap gap-2">
-                                    {!order.paymentStatus && (
-                                        <button
-                                            onClick={() => handlePaymentConfirm(order.id)}
-                                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-                                        >
-                                            確認付款
-                                        </button>
-                                    )}
                                     <button
                                         onClick={() => handleStatusChange(order.id, "PREPARING")}
                                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"

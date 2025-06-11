@@ -4,18 +4,18 @@ import { notifyOrderStatus } from "@/lib/mqttClient";
 
 export async function GET(request, { params }) {
     try {
-        const { customerId } = params;
+        const { id } = params;
 
-        if (!customerId || typeof customerId !== "string") {
+        if (!id || typeof id !== "string") {
             return NextResponse.json(
-                { message: "customerId 必須提供且為字串" },
+                { message: "id 必須提供且為字串" },
                 { status: 400 }
             );
         }
 
         // 檢查用戶角色
         const user = await prisma.user.findUnique({
-            where: { id: customerId },
+            where: { id },
             select: { role: true }
         });
 
@@ -34,7 +34,7 @@ export async function GET(request, { params }) {
             whereCondition = {};
         } else {
             // 如果是顧客，只獲取自己的訂單
-            whereCondition = { customerId };
+            whereCondition = { customerId: id };
         }
 
         const orders = await prisma.order.findMany({
@@ -93,16 +93,17 @@ export async function GET(request, { params }) {
         );
     }
 }
+
 export async function POST(request, { params }) {
     try {
         const body = await request.json();
-        const { customerId } = await params;
+        const { id } = params;
         const { orderItems } = body;
 
-        // 驗證 customerId
-        if (!customerId || typeof customerId !== "string") {
+        // 驗證 id
+        if (!id || typeof id !== "string") {
             return NextResponse.json(
-                { message: "customerId 是必填欄位，且需為字串" },
+                { message: "id 是必填欄位，且需為字串" },
                 { status: 400 }
             );
         }
@@ -161,7 +162,7 @@ export async function POST(request, { params }) {
 
         // 建立 Order 與 OrderItems
         const createData = {
-            customerId,
+            customerId: id,
             totalAmount,
             items: {
                 create: validOrderItems.map((item) => ({
@@ -193,6 +194,66 @@ export async function POST(request, { params }) {
         console.error("建立訂單錯誤:", error);
         return NextResponse.json(
             { message: "伺服器錯誤", error: String(error) },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(request, { params }) {
+    try {
+        const { id } = params;
+        const userId = request.headers.get("x-user-id");
+
+        console.log("刪除訂單請求 - 訂單ID:", id);
+        console.log("刪除訂單請求 - 用戶ID:", userId);
+
+        if (!userId) {
+            return NextResponse.json(
+                { message: "未登入" },
+                { status: 401 }
+            );
+        }
+
+        // 檢查訂單是否存在且屬於該用戶
+        const order = await prisma.order.findFirst({
+            where: {
+                id: id,
+                customerId: userId,
+                status: "COMPLETED"  // 只允許刪除已完成的訂單
+            }
+        });
+
+        if (!order) {
+            console.log("找不到訂單或無權限刪除");
+            return NextResponse.json(
+                { message: "找不到訂單或無權限刪除" },
+                { status: 404 }
+            );
+        }
+
+        // 刪除訂單項目
+        await prisma.orderItem.deleteMany({
+            where: {
+                orderId: id
+            }
+        });
+
+        // 刪除訂單
+        await prisma.order.delete({
+            where: {
+                id: id
+            }
+        });
+
+        console.log("訂單已成功刪除");
+        return NextResponse.json(
+            { message: "訂單已成功刪除" },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error("刪除訂單失敗:", error);
+        return NextResponse.json(
+            { message: "刪除訂單失敗", error: error.message },
             { status: 500 }
         );
     }

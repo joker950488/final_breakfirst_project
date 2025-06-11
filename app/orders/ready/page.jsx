@@ -8,6 +8,7 @@ export default function ReadyOrdersPage() {
     const router = useRouter();
     const [orders, setOrders] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const user = JSON.parse(sessionStorage.getItem("user"));
@@ -20,32 +21,19 @@ export default function ReadyOrdersPage() {
 
     const getReadyOrders = async (userId) => {
         try {
-            setIsLoading(true);
             const response = await fetch("/api/orders/ready", {
                 headers: {
                     "x-user-id": userId
                 }
             });
-
             if (!response.ok) {
-                if (response.status === 401) {
-                    router.push("/login");
-                    return;
-                }
-                if (response.status === 403) {
-                    router.push("/");
-                    return;
-                }
-                const errorData = await response.json();
-                throw new Error(errorData.message || "獲取訂單失敗");
+                throw new Error("獲取訂單失敗");
             }
-
             const data = await response.json();
             setOrders(data);
         } catch (error) {
-            console.error("獲取訂單錯誤:", error);
-            toast.error(error.message || "獲取訂單失敗");
-            setOrders([]);
+            console.error("獲取訂單失敗:", error);
+            setError("獲取訂單失敗，請稍後再試");
         } finally {
             setIsLoading(false);
         }
@@ -104,37 +92,37 @@ export default function ReadyOrdersPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex justify-between items-center mb-4">
+                                    <div className="flex justify-between items-center mb-4">
                                     <h4 className="font-semibold text-gray-700">訂單內容</h4>
-                                    <span className="text-lg font-bold text-gray-900">
-                                        NT$ {order.totalAmount}
-                                    </span>
-                                </div>
+                                        <span className="text-lg font-bold text-gray-900">
+                                            NT$ {order.totalAmount}
+                                        </span>
+                                    </div>
 
-                                <div className="space-y-2">
-                                    {order.items.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            className="flex justify-between items-center"
-                                        >
-                                            <div>
-                                                <p className="text-gray-800">
-                                                    {item.menuItem.name}
-                                                </p>
-                                                <p className="text-sm text-gray-500">
-                                                    數量: {item.quantity}
-                                                </p>
-                                                {item.specialRequest && (
-                                                    <p className="text-sm text-gray-500">
-                                                        備註: {item.specialRequest}
+                                    <div className="space-y-2">
+                                        {order.items.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                className="flex justify-between items-center"
+                                            >
+                                                <div>
+                                                    <p className="text-gray-800">
+                                                        {item.menuItem.name}
                                                     </p>
-                                                )}
+                                                    <p className="text-sm text-gray-500">
+                                                        數量: {item.quantity}
+                                                    </p>
+                                                    {item.specialRequest && (
+                                                        <p className="text-sm text-gray-500">
+                                                            備註: {item.specialRequest}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <p className="text-gray-700">
+                                                    NT$ {item.menuItem.price * item.quantity}
+                                                </p>
                                             </div>
-                                            <p className="text-gray-700">
-                                                NT$ {item.menuItem.price * item.quantity}
-                                            </p>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             </div>
                         ))}
